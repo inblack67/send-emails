@@ -4,10 +4,23 @@ import { ChangeEvent, FormEvent, useEffect, useState } from 'react';
 import axios from 'axios';
 import io from 'socket.io-client';
 
+export interface IEmailJob {
+  id: number;
+  count: number;
+  sentEmails: number;
+}
+
+export interface ICurrentEmailJobUpdate {
+  jobId: number;
+  sentSoFar: number;
+}
+
 export default function Home() {
-  const [emails, setEmails] = useState('');
-  const [emailJobs, setEmailJobs] = useState<any>(null);
-  const [newCurrent, setNewCurrent] = useState<any>(null);
+  const [formData, setFormData] = useState<number>(0);
+  const [emailJobs, setEmailJobs] = useState<IEmailJob[]>([]);
+  const [newCurrent, setNewCurrent] = useState<ICurrentEmailJobUpdate | null>(
+    null,
+  );
 
   useEffect(() => {
     fetchJobs();
@@ -15,22 +28,19 @@ export default function Home() {
 
   useEffect(() => {
     if (newCurrent != null) {
-      const currentRow = emailJobs.find(
-        (el: any) => el.id.toString() == newCurrent.jobId.toString(),
-      );
-      console.log('currentRow = ', currentRow);
+      const currentRow = emailJobs.find((el: any) => el.id == newCurrent.jobId);
       setEmailJobs([
-        ...emailJobs.filter(
-          (el: any) => el.id.toString() != currentRow.id.toString(),
-        ),
-        { ...currentRow, sentEmails: newCurrent.sentSoFar },
+        ...emailJobs.filter((el) => el.id != currentRow!!.id),
+        { ...currentRow!!, sentEmails: newCurrent.sentSoFar },
       ]);
     }
   }, [newCurrent]);
 
   useEffect(() => {
     // Connect to the WebSocket server
-    const socket = io('http://localhost:8001');
+    const socket = io(
+      process.env.NEXT_PUBLIC_WEBSOCKET_SERVER_URL ?? 'http://localhost:8001',
+    );
 
     // Handle connection
     socket.on('connect', () => {
@@ -55,31 +65,32 @@ export default function Home() {
   }, []);
 
   const fetchJobs = async () => {
-    const res = await axios.get('http://localhost:4000/email-jobs');
-    console.log(res);
+    const res = await axios.get(
+      `${process.env.NEXT_PUBLIC_SERVER_URL}/email-jobs`,
+    );
     setEmailJobs(res.data);
   };
 
   const sendEmails = async () => {
-    const res = await axios.post('http://localhost:4000/send-emails', {
-      count: +emails,
+    await axios.post(`${process.env.NEXT_PUBLIC_SERVER_URL}/send-emails`, {
+      count: formData,
     });
-    console.log(res.data);
     fetchJobs();
   };
 
   const handleSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
+    if (formData < 1) return;
     sendEmails();
   };
 
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setEmails(e.target.value);
+    setFormData(+e.target.value);
   };
 
   return (
-    <div className='flex flex-col content-center py-2 mt-4'>
-      <div className='w-full max-w-xs mb-2'>
+    <div className='flex flex-col  py-2 mt-4'>
+      <div className='w-full max-w-xs mb-2 flex items-center justify-center'>
         <form
           className='bg-white shadow-md rounded px-8 pt-6 pb-8 mb-4'
           onSubmit={handleSubmit}
@@ -91,7 +102,7 @@ export default function Home() {
             <input
               className='shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline'
               id='count'
-              type='text'
+              type='number'
               placeholder='100'
               onChange={handleChange}
             />
@@ -116,9 +127,9 @@ export default function Home() {
           </tr>
         </thead>
         <tbody>
-          {emailJobs
+          {emailJobs.length > 0
             ? emailJobs.map((el: any) => (
-                <tr key={el.id}>
+                <tr key={el.id} className='text-center'>
                   <td>{el.id}</td>
                   <td>{el.emailCount}</td>
                   <td>{el.sentEmails}</td>

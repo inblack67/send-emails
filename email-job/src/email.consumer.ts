@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Injectable, OnModuleInit, Inject } from '@nestjs/common';
 import { Repository } from 'typeorm';
 import { ConsumerService } from './kafka/consumer.service';
@@ -35,7 +34,7 @@ export class EmailConsumer implements OnModuleInit {
           await this.sendEmail(+process.env.MILLIS_PER_EMAIL);
 
           await this.emailJobRepo.update(
-            { id: +payload.jobId },
+            { id: payload.jobId },
             {
               sentEmails: payload.current,
             },

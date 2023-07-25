@@ -1,5 +1,3 @@
-/* eslint-disable prettier/prettier */
-
 import { DataSource } from 'typeorm';
 import { EmailJob } from './EmailJob.entity';
 

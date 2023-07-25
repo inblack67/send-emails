@@ -1,4 +1,3 @@
-/* eslint-disable prettier/prettier */
 import { Injectable, OnApplicationShutdown } from '@nestjs/common';
 import {
   Consumer,

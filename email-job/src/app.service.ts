@@ -22,7 +22,7 @@ export class AppService {
       emailCount: dto.count,
     });
 
-    const jobId = res.id.toString();
+    const jobId = res.id;
 
     const messages: Message[] = [];
 
@@ -44,6 +44,6 @@ export class AppService {
   }
 
   async getAllJobs(): Promise<EmailJob[]> {
-    return await this.emailJobRepo.find();
+    return await this.emailJobRepo.find({ order: { id: 'ASC' } });
   }
 }
