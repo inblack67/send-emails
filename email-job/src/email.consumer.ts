@@ -29,7 +29,6 @@ export class EmailConsumer implements OnModuleInit {
           console.log({
             topic: topic.toString(),
             partition: partition,
-            value: message.value.toString(),
             payload,
           });
 
